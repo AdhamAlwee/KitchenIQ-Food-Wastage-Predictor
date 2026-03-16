@@ -1,0 +1,9 @@
+prophet
+pandas
+numpy
+scikit-learn
+fastapi
+uvicorn
+joblib
+groq
+python-dotenv

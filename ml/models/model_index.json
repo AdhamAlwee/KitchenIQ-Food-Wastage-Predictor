@@ -1,0 +1,20 @@
+{
+  "Burger   Sandwich_lunch": "models/prophet_Burger___Sandwich_lunch.pkl",
+  "Char Kuey Teow_dinner": "models/prophet_Char_Kuey_Teow_dinner.pkl",
+  "Economy Rice_lunch": "models/prophet_Economy_Rice_lunch.pkl",
+  "Fried Rice_lunch": "models/prophet_Fried_Rice_lunch.pkl",
+  "Kuih Assorted_breakfast": "models/prophet_Kuih_Assorted_breakfast.pkl",
+  "Laksa_lunch": "models/prophet_Laksa_lunch.pkl",
+  "Mee Goreng_lunch": "models/prophet_Mee_Goreng_lunch.pkl",
+  "Mee Goreng Mamak_breakfast": "models/prophet_Mee_Goreng_Mamak_breakfast.pkl",
+  "Nasi Ayam_lunch": "models/prophet_Nasi_Ayam_lunch.pkl",
+  "Nasi Campur_dinner": "models/prophet_Nasi_Campur_dinner.pkl",
+  "Nasi Campur_lunch": "models/prophet_Nasi_Campur_lunch.pkl",
+  "Nasi Goreng Kampung_dinner": "models/prophet_Nasi_Goreng_Kampung_dinner.pkl",
+  "Nasi Lemak_breakfast": "models/prophet_Nasi_Lemak_breakfast.pkl",
+  "Roti Canai_breakfast": "models/prophet_Roti_Canai_breakfast.pkl",
+  "Roti Canai Dinner_dinner": "models/prophet_Roti_Canai_Dinner_dinner.pkl",
+  "Soup Noodles_dinner": "models/prophet_Soup_Noodles_dinner.pkl",
+  "Toast & Eggs_breakfast": "models/prophet_Toast_&_Eggs_breakfast.pkl",
+  "Western Set_dinner": "models/prophet_Western_Set_dinner.pkl"
+}

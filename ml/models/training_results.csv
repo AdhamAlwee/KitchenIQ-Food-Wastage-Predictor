@@ -1,0 +1,19 @@
+menu_item,meal_type,mae,mape,model_path
+Nasi Lemak,breakfast,4.7,30.1,models/prophet_Nasi_Lemak_breakfast.pkl
+Roti Canai,breakfast,3.8,30.0,models/prophet_Roti_Canai_breakfast.pkl
+Mee Goreng Mamak,breakfast,2.8,30.1,models/prophet_Mee_Goreng_Mamak_breakfast.pkl
+Toast & Eggs,breakfast,2.0,26.5,models/prophet_Toast_&_Eggs_breakfast.pkl
+Kuih Assorted,breakfast,1.6,28.4,models/prophet_Kuih_Assorted_breakfast.pkl
+Nasi Campur,lunch,12.1,33.9,models/prophet_Nasi_Campur_lunch.pkl
+Mee Goreng,lunch,6.5,32.4,models/prophet_Mee_Goreng_lunch.pkl
+Nasi Ayam,lunch,8.4,33.0,models/prophet_Nasi_Ayam_lunch.pkl
+Economy Rice,lunch,8.9,33.2,models/prophet_Economy_Rice_lunch.pkl
+Burger / Sandwich,lunch,3.4,27.7,models/prophet_Burger___Sandwich_lunch.pkl
+Laksa,lunch,5.3,32.0,models/prophet_Laksa_lunch.pkl
+Fried Rice,lunch,6.0,32.4,models/prophet_Fried_Rice_lunch.pkl
+Nasi Campur,dinner,7.6,31.0,models/prophet_Nasi_Campur_dinner.pkl
+Char Kuey Teow,dinner,4.8,30.3,models/prophet_Char_Kuey_Teow_dinner.pkl
+Nasi Goreng Kampung,dinner,5.5,30.1,models/prophet_Nasi_Goreng_Kampung_dinner.pkl
+Western Set,dinner,3.3,28.1,models/prophet_Western_Set_dinner.pkl
+Soup Noodles,dinner,3.9,29.8,models/prophet_Soup_Noodles_dinner.pkl
+Roti Canai Dinner,dinner,2.2,29.2,models/prophet_Roti_Canai_Dinner_dinner.pkl
