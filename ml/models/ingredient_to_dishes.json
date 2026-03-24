@@ -1,0 +1,61 @@
+{
+  "Chicken (Fresh)": [
+    "Nasi Ayam",
+    "Nasi Campur"
+  ],
+  "Fish (Mackerel)": [
+    "Laksa"
+  ],
+  "Eggs": [
+    "Nasi Lemak",
+    "Toast & Eggs",
+    "Mee Goreng Mamak",
+    "Nasi Campur"
+  ],
+  "Coconut Milk (Fresh)": [
+    "Nasi Lemak"
+  ],
+  "Bean Sprouts": [
+    "Mee Goreng Mamak",
+    "Mee Goreng",
+    "Char Kuey Teow"
+  ],
+  "Cabbage": [
+    "Mee Goreng Mamak",
+    "Mee Goreng",
+    "Nasi Campur"
+  ],
+  "Bok Choy (Pok Choy)": [
+    "Nasi Campur"
+  ],
+  "Laksa Noodles (Fresh)": [
+    "Laksa"
+  ],
+  "Tofu": [
+    "Mee Goreng Mamak"
+  ],
+  "Cucumber": [
+    "Nasi Lemak",
+    "Nasi Ayam",
+    "Burger / Sandwich"
+  ],
+  "Chilli Paste (Fresh)": [
+    "Mee Goreng Mamak",
+    "Mee Goreng",
+    "Char Kuey Teow"
+  ],
+  "Wheat Flour": [
+    "Roti Canai"
+  ],
+  "Bread / Burger Buns": [
+    "Burger / Sandwich",
+    "Toast & Eggs"
+  ],
+  "Cheese (Sliced)": [
+    "Burger / Sandwich"
+  ],
+  "Butter / Margarine": [
+    "Roti Canai",
+    "Toast & Eggs"
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "Nasi Lemak": [
+    [
+      "Rice",
+      0.1
+    ],
+    [
+      "Eggs",
+      0.1
+    ],
+    [
+      "Coconut Milk (Fresh)",
+      0.05
+    ],
+    [
+      "Cucumber",
+      0.05
+    ]
+  ],
+  "Roti Canai": [
+    [
+      "Wheat Flour",
+      0.067
+    ],
+    [
+      "Butter / Margarine",
+      0.007
+    ]
+  ],
+  "Mee Goreng Mamak": [
+    [
+      "Bean Sprouts",
+      0.04
+    ],
+    [
+      "Cabbage",
+      0.04
+    ],
+    [
+      "Tofu",
+      0.04
+    ],
+    [
+      "Eggs",
+      0.1
+    ],
+    [
+      "Chilli Paste (Fresh)",
+      0.018
+    ]
+  ],
+  "Toast & Eggs": [
+    [
+      "Bread / Burger Buns",
+      0.1
+    ],
+    [
+      "Eggs",
+      0.25
+    ],
+    [
+      "Butter / Margarine",
+      0.01
+    ]
+  ],
+  "Nasi Campur": [
+    [
+      "Rice",
+      0.1
+    ],
+    [
+      "Chicken (Fresh)",
+      0.1
+    ],
+    [
+      "Cabbage",
+      0.05
+    ],
+    [
+      "Eggs",
+      0.1
+    ]
+  ],
+  "Mee Goreng": [
+    [
+      "Bean Sprouts",
+      0.04
+    ],
+    [
+      "Cabbage",
+      0.04
+    ],
+    [
+      "Eggs",
+      0.1
+    ]
+  ],
+  "Nasi Ayam": [
+    [
+      "Rice",
+      0.1
+    ],
+    [
+      "Chicken (Fresh)",
+      0.188
+    ]
+  ],
+  "Laksa": [
+    [
+      "Fish (Mackerel)",
+      0.083
+    ],
+    [
+      "Laksa Noodles (Fresh)",
+      0.1
+    ],
+    [
+      "Cucumber",
+      0.05
+    ]
+  ],
+  "Char Kuey Teow": [
+    [
+      "Bean Sprouts",
+      0.05
+    ],
+    [
+      "Eggs",
+      0.25
+    ],
+    [
+      "Chilli Paste (Fresh)",
+      0.008
+    ]
+  ],
+  "Burger / Sandwich": [
+    [
+      "Bread / Burger Buns",
+      0.1
+    ],
+    [
+      "Cheese (Sliced)",
+      0.02
+    ]
+  ]
+}

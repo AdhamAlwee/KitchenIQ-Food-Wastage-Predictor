@@ -1,0 +1,18 @@
+{
+  "features": [
+    "ingredient_name_enc",
+    "category_enc",
+    "storage_type_enc",
+    "purchase_frequency_enc",
+    "season_enc",
+    "weather_on_delivery_enc",
+    "was_opened_same_day",
+    "quantity_delivered",
+    "delivery_month",
+    "base_shelf_days"
+  ],
+  "target": "actual_days_lasted",
+  "model_type": "XGBRegressor",
+  "mae_days": 8.29,
+  "mape_pct": 29.29
+}
