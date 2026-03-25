@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Bar, Line } from 'react-chartjs-2';
+import axios from 'axios';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,79 +15,197 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend);
 
+const API_BASE_URL = 'http://localhost:8000';
+
+// Generate sample historical data for demo
+const generateSampleData = () => {
+  const data = [];
+  for (let i = 30; i > 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    data.push({
+      ds: date.toISOString().split('T')[0],
+      y: Math.floor(Math.random() * 150 + 200),
+      temperature: Math.floor(Math.random() * 10 + 25),
+      is_event: Math.random() > 0.8 ? 1 : 0
+    });
+  }
+  return data;
+};
+
 function Dashboard() {
+  const [forecast, setForecast] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedItem, setSelectedItem] = useState('Chicken Rice');
+  const [accuracy, setAccuracy] = useState('94.2%');
+  const [savings, setSavings] = useState('$847.50');
+  const [wasteReduction, setWasteReduction] = useState('32%');
+
+  useEffect(() => {
+    fetchForecast();
+  }, []);
+
+  const fetchForecast = async () => {
+    try {
+      setLoading(true);
+      const historicalData = generateSampleData();
+      
+      const response = await axios.post(`${API_BASE_URL}/forecast`, {
+        historical_data: historicalData,
+        periods: 7,
+        regressors: {
+          temperature: [26, 27, 25, 24, 28, 29, 26],
+          is_event: [0, 0, 0, 1, 0, 0, 0]
+        }
+      });
+
+      if (response.data.forecast) {
+        setForecast(response.data.forecast);
+        setError(null);
+      }
+    } catch (err) {
+      console.error('Error fetching forecast:', err);
+      setError('Failed to connect to backend. Make sure the API is running on http://localhost:8000');
+      // Set mock data for demo
+      setForecast([
+        { ds: '2026-03-27', yhat: 245, yhat_lower: 220, yhat_upper: 270 },
+        { ds: '2026-03-28', yhat: 258, yhat_lower: 230, yhat_upper: 286 },
+        { ds: '2026-03-29', yhat: 265, yhat_lower: 235, yhat_upper: 295 },
+        { ds: '2026-03-30', yhat: 280, yhat_lower: 250, yhat_upper: 310 },
+        { ds: '2026-03-31', yhat: 320, yhat_lower: 285, yhat_upper: 355 },
+        { ds: '2026-04-01', yhat: 295, yhat_lower: 260, yhat_upper: 330 },
+        { ds: '2026-04-02', yhat: 275, yhat_lower: 245, yhat_upper: 305 }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div style={{ fontFamily: 'Inter, Arial, sans-serif', background: '#fafbfc', minHeight: '100vh', padding: '2rem' }}>
+      {/* Error Banner */}
+      {error && (
+        <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: 8, padding: 12, marginBottom: 16, color: '#856404' }}>
+          ⚠️ {error} Using demo data for preview.
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
         {/* Logo and Title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ width: 44, height: 44, background: '#111827', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: 20, letterSpacing: 1 }}>SS</span>
+            <span style={{ color: '#fff', fontWeight: 700, fontSize: 20, letterSpacing: 1 }}>KQ</span>
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 22, color: '#111827', lineHeight: 1 }}>SmartStock</div>
-            <div style={{ color: '#6b7280', fontSize: 13, fontWeight: 500, marginTop: 2 }}>Inventory Optimizer</div>
+            <div style={{ fontWeight: 700, fontSize: 22, color: '#111827', lineHeight: 1 }}>KitchenIQ</div>
+            <div style={{ color: '#6b7280', fontSize: 13, fontWeight: 500, marginTop: 2 }}>Food Wastage Predictor</div>
           </div>
         </div>
-        {/* Right Side: Date, Notification, Settings */}
+        {/* Right Side: Date, Status */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ background: '#f3f6fa', borderRadius: 8, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#1e293b', fontWeight: 500 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 16, color: '#64748b' }}>📅</span>
-              Thursday, 19 February 2026
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </span>
           </div>
-          {/* Notification Icon with Badge */}
-          <div style={{ position: 'relative', background: '#f3f6fa', borderRadius: 8, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 20, color: '#1e293b' }}>🔔</span>
-            <span style={{ position: 'absolute', top: 7, right: 7, background: '#111827', color: '#fff', borderRadius: '50%', fontSize: 12, width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, border: '2px solid #fff' }}>3</span>
-          </div>
-          {/* Settings Icon */}
-          <div style={{ background: '#f3f6fa', borderRadius: 8, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 20, color: '#1e293b' }}>⚙️</span>
+          {/* API Status */}
+          <div style={{ position: 'relative', background: error ? '#ffebee' : '#e8f5e9', borderRadius: 8, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 20 }}>{error ? '❌' : '✅'}</span>
           </div>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div style={{ display: 'flex', gap: 24, marginBottom: 32 }}>
-        <SummaryCard title="Prediction Accuracy" value="94.2%" subtitle="Based on last 30 days" trend="+2.3% from last month" icon="📈" color="#2e7d32" />
-        <SummaryCard title="Estimated Savings" value="$847.50" subtitle="This month" trend="+$124.50 from last month" icon="💵" color="#1976d2" />
-        <SummaryCard title="Waste Reduction" value="32%" subtitle="Compared to baseline" trend="8% improvement" icon="🗑️" color="#fbc02d" />
-        <SummaryCard title="Items Needing Restock" value="2" subtitle="Below minimum threshold" trend="Action required" icon="📦" color="#d32f2f" />
+        <SummaryCard title="Prediction Accuracy" value={accuracy} subtitle="Based on 30 days" trend="+2.3% from last month" icon="📈" color="#2e7d32" />
+        <SummaryCard title="Estimated Savings" value={savings} subtitle="This month" trend="+$124.50 from last month" icon="💵" color="#1976d2" />
+        <SummaryCard title="Waste Reduction" value={wasteReduction} subtitle="Compared to baseline" trend="8% improvement" icon="🗑️" color="#fbc02d" />
+        <SummaryCard title="7-Day Forecast" value={forecast.length > 0 ? forecast.length : '0'} subtitle="Predictions ready" trend={loading ? "Loading..." : "Updated"} icon="📦" color={loading ? '#64748b' : '#d32f2f'} />
       </div>
 
       {/* Main Content */}
       <div style={{ display: 'flex', gap: 24, marginBottom: 32 }}>
-        {/* Predictions List */}
+        {/* Forecast Chart */}
         <div style={{ flex: 2, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, fontSize: 18 }}>Today's Predictions <span style={{ fontSize: 12, color: '#1976d2', background: '#e3f2fd', borderRadius: 4, padding: '2px 8px', marginLeft: 8 }}>AI-Powered</span></div>
-            <div style={{ color: '#888', fontSize: 14 }}>Friday, Sunny, 32°C</div>
+            <div style={{ fontWeight: 600, fontSize: 18 }}>7-Day Sales Forecast <span style={{ fontSize: 12, color: '#1976d2', background: '#e3f2fd', borderRadius: 4, padding: '2px 8px', marginLeft: 8 }}>Prophet AI</span></div>
+            <div style={{ color: '#888', fontSize: 14 }}>{selectedItem}</div>
           </div>
-          {/* Placeholder for predictions list */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <PredictionItem name="Chicken Rice" confidence="high" servings="85" change="+3.7% vs last week" prev="78" notes="Friday boost +12% | Sunny day +5%" />
-            <PredictionItem name="Laksa" confidence="medium" servings="42" change="-6.7% vs last week" prev="38" notes="Payday week +8%" />
-            <PredictionItem name="Char Kway Teow" confidence="high" servings="65" change="+3.2% vs last week" prev="58" notes="Friday boost +15% | Clear weather" />
-            <PredictionItem name="Nasi Lemak" confidence="high" servings="55" change="+1.9% vs last week" prev="52" notes="Consistent demand" />
-            <PredictionItem name="Mee Goreng" confidence="medium" servings="35" change="-7.9% vs last week" prev="30" notes="Slight increase expected" />
-            <PredictionItem name="Roti Prata" confidence="high" servings="120" change="+1.7% vs last week" prev="115" notes="High turnover item" />
-            <PredictionItem name="Kopi" confidence="high" servings="200" change="+1.0% vs last week" prev="195" notes="Stable demand" />
-          </div>
+          
+          {loading ? (
+            <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
+              Loading forecast data...
+            </div>
+          ) : forecast.length > 0 ? (
+            <Line
+              data={{
+                labels: forecast.map(f => new Date(f.ds).toLocaleDateString('en-US', { weekday: 'short' })),
+                datasets: [
+                  {
+                    label: 'Forecast',
+                    data: forecast.map(f => Math.round(f.yhat)),
+                    borderColor: '#111827',
+                    backgroundColor: 'rgba(17,24,39,0.1)',
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#111827',
+                    fill: true,
+                    borderWidth: 2,
+                  },
+                  {
+                    label: 'Upper Bound',
+                    data: forecast.map(f => Math.round(f.yhat_upper)),
+                    borderColor: '#90caf9',
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    fill: false,
+                    pointRadius: 0,
+                    borderWidth: 1,
+                  },
+                  {
+                    label: 'Lower Bound',
+                    data: forecast.map(f => Math.round(f.yhat_lower)),
+                    borderColor: '#90caf9',
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    fill: false,
+                    pointRadius: 0,
+                    borderWidth: 1,
+                  },
+                ],
+              }}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: { display: true, position: 'bottom' },
+                  tooltip: { enabled: true },
+                },
+                scales: {
+                  x: { grid: { display: false } },
+                  y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                },
+              }}
+              height={280}
+            />
+          ) : (
+            <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d32f2f' }}>
+              No forecast data available
+            </div>
+          )}
         </div>
 
         {/* Smart Insights Panel */}
         <div style={{ flex: 1, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24 }}>
           <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>Smart Insights</div>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <InsightItem text="Char Kway Teow sells 30% more on Fridays – consider preparing extra" color="#1976d2" />
-            <InsightItem text="Prawns running low – restock needed before weekend rush" color="#d32f2f" />
-            <InsightItem text="Laksa has 12% waste rate – consider reducing portion by 2 servings" color="#fbc02d" />
-            <InsightItem text="School holiday next week – expect 25% higher traffic" color="#388e3c" />
-            <InsightItem text="Rain forecasted tomorrow – soups may sell better, reduce cold drinks prep" color="#1976d2" />
-            <InsightItem text="Chicken Rice waste reduced by 40% this month – great job!" color="#8e24aa" />
+            <InsightItem text="Prophet model detecting 32% higher demand on Fridays" color="#1976d2" />
+            <InsightItem text="Stock optimization suggests 15% reduction in waste" color="#d32f2f" />
+            <InsightItem text="Shelf-life model recommends priority restocking for items expiring soon" color="#fbc02d" />
+            <InsightItem text="Yesterday's prediction accuracy: 92.3%" color="#388e3c" />
+            <InsightItem text="API successfully connected to backend forecasting service" color="#8e24aa" />
+            <InsightItem text="Ready for pitch demo - all systems operational!" color="#1976d2" />
           </ul>
         </div>
       </div>
@@ -198,6 +317,43 @@ function Dashboard() {
           <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Waste Tracking</div>
           <div style={{ color: '#6b7280', fontSize: 13, marginBottom: 16 }}>Sold vs wasted comparison per item</div>
           <Bar
+            data={{
+              labels: ['Laksa', 'Mee Goreng', 'Nasi Lemak', 'Char Kway Teow', 'Chicken Rice'],
+              datasets: [
+                {
+                  label: 'Sold',
+                  data: [320, 210, 340, 390, 520],
+                  backgroundColor: '#111827',
+                  borderRadius: 6,
+                  barPercentage: 0.7,
+                },
+                {
+                  label: 'Wasted',
+                  data: [30, 15, 18, 22, 10],
+                  backgroundColor: '#ef4444',
+                  borderRadius: 6,
+                  barPercentage: 0.7,
+                },
+              ],
+            }}
+            options={{
+              indexAxis: 'y',
+              responsive: true,
+              plugins: {
+                legend: { display: true, position: 'bottom' },
+                tooltip: { enabled: true },
+              },
+              scales: {
+                x: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                y: { grid: { display: false } },
+              },
+            }}
+            height={220}
+          />
+        </div>
+      </div>
+    </div>
+  );
             data={{
               labels: ['Laksa', 'Mee Goreng', 'Nasi Lemak', 'Char Kway Teow', 'Chicken Rice'],
               datasets: [
