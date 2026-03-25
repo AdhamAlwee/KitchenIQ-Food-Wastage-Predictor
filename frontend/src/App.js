@@ -354,43 +354,6 @@ function Dashboard() {
       </div>
     </div>
   );
-            data={{
-              labels: ['Laksa', 'Mee Goreng', 'Nasi Lemak', 'Char Kway Teow', 'Chicken Rice'],
-              datasets: [
-                {
-                  label: 'Sold',
-                  data: [320, 210, 340, 390, 520],
-                  backgroundColor: '#111827',
-                  borderRadius: 6,
-                  barPercentage: 0.7,
-                },
-                {
-                  label: 'Wasted',
-                  data: [30, 15, 18, 22, 10],
-                  backgroundColor: '#ef4444',
-                  borderRadius: 6,
-                  barPercentage: 0.7,
-                },
-              ],
-            }}
-            options={{
-              indexAxis: 'y',
-              responsive: true,
-              plugins: {
-                legend: { display: true, position: 'bottom' },
-                tooltip: { enabled: true },
-              },
-              scales: {
-                x: { beginAtZero: true, grid: { color: '#f3f4f6' } },
-                y: { grid: { display: false } },
-              },
-            }}
-            height={220}
-          />
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function SummaryCard({ title, value, subtitle, trend, icon, color }) {
