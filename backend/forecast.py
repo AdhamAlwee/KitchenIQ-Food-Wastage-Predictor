@@ -38,7 +38,16 @@ def train_and_forecast(historical_data, periods=7, regressors=None):
     if regressors:
         for key, values in regressors.items():
             if key in df.columns:
-                future[key] = values[:len(future)]  # Pad or truncate to match length
+                historical_values = df[key].tolist()
+                future_values = list(values[:periods])
+
+                if len(future_values) < periods:
+                    fill_value = historical_values[-1] if historical_values else 0
+                    future_values.extend([fill_value] * (periods - len(future_values)))
+
+                # future contains historical rows + forecast rows.
+                combined_values = historical_values + future_values
+                future[key] = combined_values[:len(future)]
 
     # Forecast
     forecast = model.predict(future)

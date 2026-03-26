@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Bar, Line } from 'react-chartjs-2';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import axios from 'axios';
+import './App.css';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  ArcElement,
   PointElement,
   LineElement,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 } from 'chart.js';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Filler);
 
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -36,11 +39,9 @@ const generateSampleData = () => {
 function Dashboard() {
   const [forecast, setForecast] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedItem, setSelectedItem] = useState('Chicken Rice');
-  const [accuracy, setAccuracy] = useState('94.2%');
-  const [savings, setSavings] = useState('$847.50');
-  const [wasteReduction, setWasteReduction] = useState('32%');
+  const [, setError] = useState(null);
+  const [accuracy] = useState('94.2%');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchForecast();
@@ -81,324 +82,874 @@ function Dashboard() {
       setLoading(false);
     }
   };
-  return (
-    <div style={{ fontFamily: 'Inter, Arial, sans-serif', background: '#fafbfc', minHeight: '100vh', padding: '2rem' }}>
-      {/* Error Banner */}
-      {error && (
-        <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: 8, padding: 12, marginBottom: 16, color: '#856404' }}>
-          ⚠️ {error} Using demo data for preview.
-        </div>
-      )}
 
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-        {/* Logo and Title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 44, height: 44, background: '#111827', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: 20, letterSpacing: 1 }}>KQ</span>
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 22, color: '#111827', lineHeight: 1 }}>KitchenIQ</div>
-            <div style={{ color: '#6b7280', fontSize: 13, fontWeight: 500, marginTop: 2 }}>Food Wastage Predictor</div>
-          </div>
+  const actualData = forecast.map(f => Math.round(f.yhat / 10 * (0.88 + Math.random() * 0.24)));
+  const forecastLabels = forecast.map((_, i) => i);
+
+  const categories = [
+    { name: 'Vegetables', waste: 15, target: 10 },
+    { name: 'Fruits', waste: 8, target: 6 },
+    { name: 'Dairy', waste: 12, target: 8 },
+    { name: 'Bakery', waste: 18, target: 12 },
+  ];
+
+  const alerts = [
+    { type: 'warning', title: 'Vegetables showing high waste', desc: 'Your vegetable waste is 50% above target. Consider adjusting orders.' },
+    { type: 'success', title: 'Great week for dairy!', desc: 'Dairy waste is 20% below target. Keep up this trend!' },
+    { type: 'danger', title: 'Bakery waste increased', desc: 'Bakery items wasted increased 35% this week. Review expiration practices.' },
+  ];
+
+  return (
+    <div className="main-area">
+      {/* Page Header */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Welcome back! Here's your waste reduction insights</p>
         </div>
-        {/* Right Side: Date, Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ background: '#f3f6fa', borderRadius: 8, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#1e293b', fontWeight: 500 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 16, color: '#64748b' }}>📅</span>
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </span>
-          </div>
-          {/* API Status */}
-          <div style={{ position: 'relative', background: error ? '#ffebee' : '#e8f5e9', borderRadius: 8, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 20 }}>{error ? '❌' : '✅'}</span>
-          </div>
-        </div>
+        <button className="log-data-btn" onClick={() => navigate('/log-data')}>+ Log Data</button>
       </div>
 
       {/* Summary Cards */}
-      <div style={{ display: 'flex', gap: 24, marginBottom: 32 }}>
-        <SummaryCard title="Prediction Accuracy" value={accuracy} subtitle="Based on 30 days" trend="+2.3% from last month" icon="📈" color="#2e7d32" />
-        <SummaryCard title="Estimated Savings" value={savings} subtitle="This month" trend="+$124.50 from last month" icon="💵" color="#1976d2" />
-        <SummaryCard title="Waste Reduction" value={wasteReduction} subtitle="Compared to baseline" trend="8% improvement" icon="🗑️" color="#fbc02d" />
-        <SummaryCard title="7-Day Forecast" value={forecast.length > 0 ? forecast.length : '0'} subtitle="Predictions ready" trend={loading ? "Loading..." : "Updated"} icon="📦" color={loading ? '#64748b' : '#d32f2f'} />
+      <div className="kq-summary-grid">
+        <KQCard icon="📉" label="Weekly Avg Waste" value="31 kg" trend="-12%" trendColor="green" />
+        <KQCard icon="📈" label="Prediction Accuracy" value={accuracy} trend="+2.3%" trendColor="green" />
+        <KQCard icon="🌿" label="This Month Saved" value="48 kg" trend="vs target" trendColor="green" />
+        <KQCard icon="⚠️" label="Alerts This Week" value="3" trend="-1 from last week" trendColor="gold" iconBg="#fef3c7" />
       </div>
 
-      {/* Main Content */}
-      <div style={{ display: 'flex', gap: 24, marginBottom: 32 }}>
-        {/* Forecast Chart */}
-        <div style={{ flex: 2, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, fontSize: 18 }}>7-Day Sales Forecast <span style={{ fontSize: 12, color: '#1976d2', background: '#e3f2fd', borderRadius: 4, padding: '2px 8px', marginLeft: 8 }}>Prophet AI</span></div>
-            <div style={{ color: '#888', fontSize: 14 }}>{selectedItem}</div>
+      {/* Chart + Category Breakdown */}
+      <div className="kq-mid-grid">
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">Weekly Predictions vs Actual</h2>
+          <div className="analytics-chart-wrap">
+            {loading ? (
+              <div className="chart-loading">Loading forecast...</div>
+            ) : (
+              <Line
+                data={{
+                  labels: forecastLabels,
+                  datasets: [
+                    {
+                      label: 'predicted',
+                      data: forecast.map(f => Math.round(f.yhat / 10)),
+                      borderColor: '#2d6a4f',
+                      backgroundColor: 'transparent',
+                      borderDash: [6, 3],
+                      tension: 0.4,
+                      pointRadius: 5,
+                      pointBackgroundColor: '#2d6a4f',
+                      borderWidth: 2,
+                    },
+                    {
+                      label: 'actual',
+                      data: actualData,
+                      borderColor: '#c9a227',
+                      backgroundColor: 'transparent',
+                      tension: 0.4,
+                      pointRadius: 5,
+                      pointBackgroundColor: '#c9a227',
+                      borderWidth: 2,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: true, position: 'bottom', labels: { usePointStyle: true } },
+                    tooltip: { enabled: true },
+                  },
+                  scales: {
+                    x: { grid: { color: '#e8f5ee' } },
+                    y: { beginAtZero: true, grid: { color: '#e8f5ee' } },
+                  },
+                }}
+              />
+            )}
           </div>
-          
-          {loading ? (
-            <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
-              Loading forecast data...
-            </div>
-          ) : forecast.length > 0 ? (
-            <Line
+        </div>
+
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">Category Breakdown</h2>
+          <div className="category-list">
+            {categories.map(cat => (
+              <div key={cat.name} className="category-item">
+                <div className="category-row">
+                  <span className="category-name">{cat.name}</span>
+                  <span className="category-value">{cat.waste} kg</span>
+                </div>
+                <div className="progress-track">
+                  <div className="progress-fill" style={{ width: `${Math.min(cat.waste / (cat.target * 1.5) * 100, 100)}%` }}></div>
+                </div>
+                <div className="category-target">Target: {cat.target} kg</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Waste by Category + Alerts */}
+      <div className="kq-bottom-grid">
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">Waste vs Target by Category</h2>
+          <div className="analytics-chart-wrap">
+            <Bar
               data={{
-                labels: forecast.map(f => new Date(f.ds).toLocaleDateString('en-US', { weekday: 'short' })),
+                labels: categories.map(c => c.name),
                 datasets: [
                   {
-                    label: 'Forecast',
-                    data: forecast.map(f => Math.round(f.yhat)),
-                    borderColor: '#111827',
-                    backgroundColor: 'rgba(17,24,39,0.1)',
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointBackgroundColor: '#111827',
-                    fill: true,
-                    borderWidth: 2,
+                    label: 'waste',
+                    data: categories.map(c => c.waste),
+                    backgroundColor: '#c9a227',
+                    borderRadius: 6,
+                    barPercentage: 0.7,
                   },
                   {
-                    label: 'Upper Bound',
-                    data: forecast.map(f => Math.round(f.yhat_upper)),
-                    borderColor: '#90caf9',
-                    borderDash: [5, 5],
-                    tension: 0.4,
-                    fill: false,
-                    pointRadius: 0,
-                    borderWidth: 1,
-                  },
-                  {
-                    label: 'Lower Bound',
-                    data: forecast.map(f => Math.round(f.yhat_lower)),
-                    borderColor: '#90caf9',
-                    borderDash: [5, 5],
-                    tension: 0.4,
-                    fill: false,
-                    pointRadius: 0,
-                    borderWidth: 1,
+                    label: 'target',
+                    data: categories.map(c => c.target),
+                    backgroundColor: '#2d6a4f',
+                    borderRadius: 6,
+                    barPercentage: 0.7,
                   },
                 ],
               }}
               options={{
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                  legend: { display: true, position: 'bottom' },
+                  legend: { display: true, position: 'bottom', labels: { usePointStyle: true } },
                   tooltip: { enabled: true },
                 },
                 scales: {
                   x: { grid: { display: false } },
-                  y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                  y: { beginAtZero: true, grid: { color: '#e8f5ee' } },
                 },
               }}
-              height={280}
             />
-          ) : (
-            <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d32f2f' }}>
-              No forecast data available
-            </div>
-          )}
+          </div>
         </div>
 
-        {/* Smart Insights Panel */}
-        <div style={{ flex: 1, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24 }}>
-          <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>Smart Insights</div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <InsightItem text="Prophet model detecting 32% higher demand on Fridays" color="#1976d2" />
-            <InsightItem text="Stock optimization suggests 15% reduction in waste" color="#d32f2f" />
-            <InsightItem text="Shelf-life model recommends priority restocking for items expiring soon" color="#fbc02d" />
-            <InsightItem text="Yesterday's prediction accuracy: 92.3%" color="#388e3c" />
-            <InsightItem text="API successfully connected to backend forecasting service" color="#8e24aa" />
-            <InsightItem text="Ready for pitch demo - all systems operational!" color="#1976d2" />
-          </ul>
-        </div>
-      </div>
-
-      {/* Analytics Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 32 }}>
-        {/* Weekly Sales Pattern */}
-        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24 }}>
-          <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Weekly Sales Pattern</div>
-          <div style={{ color: '#6b7280', fontSize: 13, marginBottom: 16 }}>Sales volume and waste by day of week</div>
-          <Bar
-            data={{
-              labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-              datasets: [
-                {
-                  label: 'Sales',
-                  data: [260, 270, 290, 312, 400, 380, 340],
-                  backgroundColor: '#111827',
-                  borderRadius: 6,
-                  barPercentage: 0.7,
-                },
-                {
-                  label: 'Waste',
-                  data: [8, 7, 10, 10, 12, 11, 9],
-                  backgroundColor: '#ef4444',
-                  borderRadius: 6,
-                  barPercentage: 0.7,
-                },
-              ],
-            }}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: { display: true, position: 'bottom' },
-                tooltip: { enabled: true },
-              },
-              scales: {
-                x: { grid: { display: false } },
-                y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
-              },
-            }}
-            height={220}
-          />
-        </div>
-
-        {/* Hourly Peak Analysis */}
-        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24 }}>
-          <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Hourly Peak Analysis</div>
-          <div style={{ color: '#6b7280', fontSize: 13, marginBottom: 16 }}>Identify your busiest hours</div>
-          <Line
-            data={{
-              labels: ['7AM', '9AM', '11AM', '1PM', '3PM', '5PM', '7PM', '9PM'],
-              datasets: [
-                {
-                  label: 'Orders',
-                  data: [45, 80, 60, 180, 90, 150, 130, 60],
-                  borderColor: '#111827',
-                  backgroundColor: 'rgba(17,24,39,0.1)',
-                  tension: 0.4,
-                  pointRadius: 4,
-                  pointBackgroundColor: '#111827',
-                  fill: false,
-                },
-              ],
-            }}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: { display: false },
-                tooltip: { enabled: true },
-              },
-              scales: {
-                x: { grid: { display: false } },
-                y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
-              },
-            }}
-            height={220}
-          />
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-        {/* Top Sellers This Week */}
-        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24 }}>
-          <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Top Sellers This Week</div>
-          <div style={{ color: '#6b7280', fontSize: 13, marginBottom: 16 }}>Best performing menu items</div>
-          <ol style={{ padding: 0, margin: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[
-              { name: 'Chicken Rice', sold: 520 },
-              { name: 'Kopi', sold: 485 },
-              { name: 'Char Kway Teow', sold: 410 },
-              { name: 'Teh', sold: 395 },
-              { name: 'Nasi Lemak', sold: 345 },
-            ].map((item, idx) => (
-              <li key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ width: 28, height: 28, background: '#f3f6fa', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#111827', fontSize: 15 }}>{idx + 1}</span>
-                <span style={{ fontWeight: 600, fontSize: 15, flex: 1 }}>{item.name}</span>
-                <div style={{ flex: 2, background: '#f3f4f6', borderRadius: 8, height: 8, margin: '0 12px', position: 'relative' }}>
-                  <div style={{ background: '#111827', borderRadius: 8, height: 8, width: `${item.sold / 520 * 100}%`, position: 'absolute', left: 0, top: 0 }}></div>
-                </div>
-                <span style={{ color: '#6b7280', fontSize: 14 }}>{item.sold} sold</span>
-              </li>
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">Recent Alerts &amp; Recommendations</h2>
+          <div className="alert-list">
+            {alerts.map((alert, i) => (
+              <div key={i} className={`alert-card alert-${alert.type}`}>
+                <div className="alert-title">{alert.title}</div>
+                <div className="alert-desc">{alert.desc}</div>
+              </div>
             ))}
-          </ol>
-        </div>
-
-        {/* Waste Tracking */}
-        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24 }}>
-          <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Waste Tracking</div>
-          <div style={{ color: '#6b7280', fontSize: 13, marginBottom: 16 }}>Sold vs wasted comparison per item</div>
-          <Bar
-            data={{
-              labels: ['Laksa', 'Mee Goreng', 'Nasi Lemak', 'Char Kway Teow', 'Chicken Rice'],
-              datasets: [
-                {
-                  label: 'Sold',
-                  data: [320, 210, 340, 390, 520],
-                  backgroundColor: '#111827',
-                  borderRadius: 6,
-                  barPercentage: 0.7,
-                },
-                {
-                  label: 'Wasted',
-                  data: [30, 15, 18, 22, 10],
-                  backgroundColor: '#ef4444',
-                  borderRadius: 6,
-                  barPercentage: 0.7,
-                },
-              ],
-            }}
-            options={{
-              indexAxis: 'y',
-              responsive: true,
-              plugins: {
-                legend: { display: true, position: 'bottom' },
-                tooltip: { enabled: true },
-              },
-              scales: {
-                x: { beginAtZero: true, grid: { color: '#f3f4f6' } },
-                y: { grid: { display: false } },
-              },
-            }}
-            height={220}
-          />
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function SummaryCard({ title, value, subtitle, trend, icon, color }) {
+
+function KQCard({ icon, label, value, trend, trendColor, iconBg }) {
+  const trendStyle = trendColor === 'gold' ? '#c9a227' : '#2d6a4f';
   return (
-    <div style={{ flex: 1, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #0001', padding: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 24 }}>{icon}</span>
-        <span style={{ fontWeight: 600, fontSize: 16 }}>{title}</span>
+    <div className="kq-card">
+      <div className="kq-card-top">
+        <span className="kq-card-label">{label}</span>
+        <div className="kq-card-icon" style={{ background: iconBg || '#e8f5ee' }}>
+          <span>{icon}</span>
+        </div>
       </div>
-      <div style={{ fontWeight: 700, fontSize: 28, color }}>{value}</div>
-      <div style={{ fontSize: 13, color: '#888' }}>{subtitle}</div>
-      <div style={{ fontSize: 13, color: color, fontWeight: 500 }}>{trend}</div>
+      <div className="kq-card-value">{value}</div>
+      <div className="kq-card-trend" style={{ color: trendStyle }}>{trend}</div>
     </div>
   );
 }
 
-function PredictionItem({ name, confidence, servings, change, prev, notes }) {
-  const confidenceColor = confidence === 'high' ? '#388e3c' : confidence === 'medium' ? '#fbc02d' : '#d32f2f';
+const NAV_LINKS = [
+  { to: '/', label: 'Dashboard' },
+  { to: '/overview', label: 'Overview' },
+  { to: '/predictions', label: 'Predictions' },
+  { to: '/analytics', label: 'Analytics' },
+  { to: '/settings', label: 'Settings' },
+];
+
+function Sidebar() {
+  const location = useLocation();
+  const active = NAV_LINKS.find(l => l.to === location.pathname);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', borderRadius: 8, padding: 16, gap: 16 }}>
-      <div style={{ width: 40, height: 40, background: '#eee', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🍽️</div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 600, fontSize: 16 }}>{name} <span style={{ fontSize: 12, color: confidenceColor, background: '#e0f2f1', borderRadius: 4, padding: '2px 8px', marginLeft: 8 }}>{confidence} confidence</span></div>
-        <div style={{ fontSize: 13, color: '#888' }}>{notes}</div>
+    <div className="sidebar">
+      <div className="sidebar-header">
+        <div className="sidebar-logo-wrap">
+          <span className="sidebar-logo-icon">🌿</span>
+          <span className="sidebar-logo-text">KitchenIQ</span>
+        </div>
+        <span className="sidebar-hamburger">☰</span>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <div style={{ fontWeight: 700, fontSize: 20 }}>{servings} <span style={{ fontWeight: 400, fontSize: 13, color: '#888' }}>servings</span></div>
-        <div style={{ fontSize: 13, color: change.startsWith('+') ? '#388e3c' : '#d32f2f' }}>{change}</div>
-        <div style={{ fontSize: 12, color: '#888' }}>Yesterday: {prev}</div>
+      <div className="sidebar-active-label">{active ? active.label : 'KitchenIQ'}</div>
+      <div className="sidebar-section-label">MENU</div>
+      <nav className="sidebar-nav">
+        {NAV_LINKS.map(l => (
+          <Link key={l.to} to={l.to} className={`sidebar-link${location.pathname === l.to ? ' sidebar-link-active' : ''}`}>{l.label}</Link>
+        ))}
+      </nav>
+      <div className="sidebar-footer">
+        <div className="sidebar-account">👤 Account (demo)</div>
       </div>
     </div>
-  );
-}
-
-function InsightItem({ text, color }) {
-  return (
-    <li style={{ background: '#f5f5f5', borderLeft: `4px solid ${color}`, borderRadius: 6, padding: '10px 14px', fontSize: 14, color: '#333' }}>{text}</li>
   );
 }
 
 function About() {
   return (
-    <div>
-      <h2>About</h2>
-      <p>This dashboard helps you track and predict food wastage.</p>
+    <div className="main-area">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">About KitchenIQ</h1>
+          <p className="page-subtitle">Food Wastage Predictor powered by Prophet AI</p>
+        </div>
+      </div>
+      <div className="kq-panel" style={{ maxWidth: 600 }}>
+        <p style={{ color: '#4a5568', lineHeight: 1.7 }}>KitchenIQ uses machine learning to predict food sales and minimize waste in hawker centre kitchens. Powered by Facebook Prophet and XGBoost shelf-life estimation.</p>
+      </div>
+    </div>
+  );
+}
+
+function LogData() {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('inventory');
+  const [submitted, setSubmitted] = useState(false);
+
+  const [inventoryForm, setInventoryForm] = useState({
+    item: '',
+    category: 'Vegetables',
+    quantity: '',
+    unit: 'kg',
+    expiry: '',
+    notes: '',
+  });
+
+  const [salesForm, setSalesForm] = useState({
+    item: '',
+    category: 'Vegetables',
+    quantity_sold: '',
+    quantity_wasted: '',
+    date: new Date().toISOString().split('T')[0],
+    notes: '',
+  });
+
+  const categories = ['Vegetables', 'Fruits', 'Dairy', 'Bakery', 'Meat', 'Beverages', 'Other'];
+  const units = ['kg', 'g', 'L', 'mL', 'pcs', 'packs'];
+
+  const handleInventoryChange = (e) => {
+    setInventoryForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSalesChange = (e) => {
+    setSalesForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setTimeout(() => {
+      setSubmitted(false);
+      if (activeTab === 'inventory') {
+        setInventoryForm({ item: '', category: 'Vegetables', quantity: '', unit: 'kg', expiry: '', notes: '' });
+      } else {
+        setSalesForm({ item: '', category: 'Vegetables', quantity_sold: '', quantity_wasted: '', date: new Date().toISOString().split('T')[0], notes: '' });
+      }
+    }, 2500);
+  };
+
+  return (
+    <div className="main-area">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Log Data</h1>
+          <p className="page-subtitle">Update your inventory or record today's sales</p>
+        </div>
+        <button className="log-data-btn log-data-btn--outline" onClick={() => navigate('/')}>← Back to Dashboard</button>
+      </div>
+
+      <div className="ld-tabs">
+        <button
+          className={`ld-tab${activeTab === 'inventory' ? ' ld-tab--active' : ''}`}
+          onClick={() => setActiveTab('inventory')}
+        >
+          📦 Inventory Update
+        </button>
+        <button
+          className={`ld-tab${activeTab === 'sales' ? ' ld-tab--active' : ''}`}
+          onClick={() => setActiveTab('sales')}
+        >
+          🧾 Sales & Waste Record
+        </button>
+      </div>
+
+      {submitted && (
+        <div className="ld-success-banner">
+          ✅ Entry logged successfully! Data will be used to improve predictions.
+        </div>
+      )}
+
+      <div className="kq-panel ld-form-panel">
+        {activeTab === 'inventory' ? (
+          <form className="ld-form" onSubmit={handleSubmit}>
+            <h3 className="ld-form-title">Add / Update Inventory Item</h3>
+            <div className="ld-form-grid">
+              <div className="ld-field">
+                <label className="ld-label">Item Name</label>
+                <input className="ld-input" name="item" value={inventoryForm.item} onChange={handleInventoryChange} placeholder="e.g. Broccoli" required />
+              </div>
+              <div className="ld-field">
+                <label className="ld-label">Category</label>
+                <select className="ld-input" name="category" value={inventoryForm.category} onChange={handleInventoryChange}>
+                  {categories.map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="ld-field">
+                <label className="ld-label">Quantity</label>
+                <input className="ld-input" name="quantity" type="number" min="0" step="0.01" value={inventoryForm.quantity} onChange={handleInventoryChange} placeholder="0" required />
+              </div>
+              <div className="ld-field">
+                <label className="ld-label">Unit</label>
+                <select className="ld-input" name="unit" value={inventoryForm.unit} onChange={handleInventoryChange}>
+                  {units.map(u => <option key={u}>{u}</option>)}
+                </select>
+              </div>
+              <div className="ld-field">
+                <label className="ld-label">Expiry Date</label>
+                <input className="ld-input" name="expiry" type="date" value={inventoryForm.expiry} onChange={handleInventoryChange} />
+              </div>
+              <div className="ld-field ld-field--full">
+                <label className="ld-label">Notes (optional)</label>
+                <textarea className="ld-input ld-textarea" name="notes" value={inventoryForm.notes} onChange={handleInventoryChange} placeholder="Any additional notes..." rows={3} />
+              </div>
+            </div>
+            <button className="ld-submit-btn" type="submit">Log Inventory Entry</button>
+          </form>
+        ) : (
+          <form className="ld-form" onSubmit={handleSubmit}>
+            <h3 className="ld-form-title">Record Sales & Waste</h3>
+            <div className="ld-form-grid">
+              <div className="ld-field">
+                <label className="ld-label">Item Name</label>
+                <input className="ld-input" name="item" value={salesForm.item} onChange={handleSalesChange} placeholder="e.g. Chicken Rice" required />
+              </div>
+              <div className="ld-field">
+                <label className="ld-label">Category</label>
+                <select className="ld-input" name="category" value={salesForm.category} onChange={handleSalesChange}>
+                  {categories.map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="ld-field">
+                <label className="ld-label">Quantity Sold</label>
+                <input className="ld-input" name="quantity_sold" type="number" min="0" step="0.01" value={salesForm.quantity_sold} onChange={handleSalesChange} placeholder="0" required />
+              </div>
+              <div className="ld-field">
+                <label className="ld-label">Quantity Wasted</label>
+                <input className="ld-input" name="quantity_wasted" type="number" min="0" step="0.01" value={salesForm.quantity_wasted} onChange={handleSalesChange} placeholder="0" required />
+              </div>
+              <div className="ld-field">
+                <label className="ld-label">Date</label>
+                <input className="ld-input" name="date" type="date" value={salesForm.date} onChange={handleSalesChange} required />
+              </div>
+              <div className="ld-field ld-field--full">
+                <label className="ld-label">Notes (optional)</label>
+                <textarea className="ld-input ld-textarea" name="notes" value={salesForm.notes} onChange={handleSalesChange} placeholder="Any additional notes..." rows={3} />
+              </div>
+            </div>
+            <button className="ld-submit-btn" type="submit">Log Sales Entry</button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Overview ─────────────────────────────────────────────────────────────────
+function Overview() {
+  const weekDaysFull = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const baseWaste = [12, 10, 14, 16, 22, 18, 15];
+  const heatData = Array.from({ length: 8 }, () =>
+    baseWaste.map(base => Math.max(0, Math.round(base + (Math.random() * 6 - 3))))
+  );
+  const maxVal = Math.max(...heatData.flat());
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const monthName = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  const monthStart = new Date(currentYear, currentMonth, 1);
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const startOffset = monthStart.getDay();
+
+  const calendarData = Array.from({ length: daysInMonth }, (_, i) => {
+    const day = i + 1;
+    const dayOfWeek = new Date(currentYear, currentMonth, day).getDay();
+    const weekendBoost = dayOfWeek === 5 || dayOfWeek === 6 ? 1.2 : 1;
+    const sales = Math.round((220 + (day % 9) * 12 + (dayOfWeek % 3) * 10) * weekendBoost);
+    const wastage = Math.round(8 + (day % 7) * 1.8 + (dayOfWeek === 5 ? 4 : 0));
+    return { day, sales, wastage };
+  });
+
+  const maxSales = Math.max(...calendarData.map(d => d.sales));
+  const maxWastage = Math.max(...calendarData.map(d => d.wastage));
+  const calendarCells = [
+    ...Array.from({ length: startOffset }, () => null),
+    ...calendarData,
+  ];
+  while (calendarCells.length % 7 !== 0) {
+    calendarCells.push(null);
+  }
+
+  const monthlyBar = {
+    labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
+    datasets: [
+      { label: 'Total Waste (kg)', data: [142, 138, 165, 129, 118, 105], backgroundColor: '#2d6a4f', borderRadius: 6, barPercentage: 0.6 },
+      { label: 'Target (kg)', data: [120, 120, 120, 100, 100, 100], backgroundColor: '#c9a227', borderRadius: 6, barPercentage: 0.6 },
+    ],
+  };
+
+  const historyLog = [
+    { date: '2026-03-26', type: 'Sales', item: 'Chicken Rice', detail: 'Sold: 320 | Wasted: 8 kg' },
+    { date: '2026-03-26', type: 'Inventory', item: 'Broccoli', detail: 'Qty: 12 kg | Expiry: 2026-03-29' },
+    { date: '2026-03-25', type: 'Sales', item: 'Laksa', detail: 'Sold: 210 | Wasted: 14 kg' },
+    { date: '2026-03-25', type: 'Sales', item: 'Kopi', detail: 'Sold: 480 | Wasted: 3 kg' },
+    { date: '2026-03-24', type: 'Inventory', item: 'Dairy Pack', detail: 'Qty: 8 L | Expiry: 2026-03-27' },
+    { date: '2026-03-23', type: 'Sales', item: 'Nasi Lemak', detail: 'Sold: 290 | Wasted: 20 kg' },
+    { date: '2026-03-22', type: 'Sales', item: 'Mee Goreng', detail: 'Sold: 175 | Wasted: 12 kg' },
+    { date: '2026-03-21', type: 'Inventory', item: 'Vegetables Bundle', detail: 'Qty: 20 kg | Expiry: 2026-03-24' },
+  ];
+
+  const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } };
+
+  return (
+    <div className="main-area">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Overview</h1>
+          <p className="page-subtitle">Historical trends and a full log of all recorded data</p>
+        </div>
+      </div>
+
+      <div className="kq-bottom-grid" style={{ marginBottom: 24 }}>
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">Monthly Waste vs Target</h2>
+          <div className="analytics-chart-wrap" style={{ height: 240 }}>
+            <Bar data={monthlyBar} options={chartOptions} />
+          </div>
+        </div>
+
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">Waste Heat Map <span className="kq-panel-sub">last 8 weeks by day</span></h2>
+          <div className="heatmap-wrap">
+            <div className="heatmap-days">
+              {days.map(d => <span key={d} className="heatmap-day-label">{d}</span>)}
+            </div>
+            <div className="heatmap-grid">
+              {heatData.map((week, w) =>
+                week.map((val, d) => (
+                  <div
+                    key={`${w}-${d}`}
+                    className="heatmap-cell"
+                    style={{ background: `rgba(45,106,79,${0.1 + (val / maxVal) * 0.9})` }}
+                    title={`${days[d]}, W${w + 1}: ${val} kg`}
+                  />
+                ))
+              )}
+            </div>
+            <div className="heatmap-legend">
+              <span>Low</span><div className="heatmap-legend-bar" /><span>High</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="kq-panel">
+        <h2 className="kq-panel-title">Data Log History</h2>
+        <table className="ov-table">
+          <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Details</th></tr></thead>
+          <tbody>
+            {historyLog.map((row, i) => (
+              <tr key={i}>
+                <td>{row.date}</td>
+                <td><span className={`ov-badge ov-badge--${row.type === 'Sales' ? 'sales' : 'inv'}`}>{row.type}</span></td>
+                <td>{row.item}</td>
+                <td className="ov-detail">{row.detail}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="kq-panel" style={{ marginTop: 24 }}>
+        <h2 className="kq-panel-title">Sales &amp; Wastage Calendar Heat Map</h2>
+        <p className="kq-panel-sub-text ov-cal-sub">{monthName} daily intensity view. Each day cell shows both Sales and Wastage heat.</p>
+
+        <div className="ov-cal-weekdays">
+          {weekDaysFull.map(d => (
+            <span key={d} className="ov-cal-weekday">{d}</span>
+          ))}
+        </div>
+
+        <div className="ov-cal-grid">
+          {calendarCells.map((entry, idx) => {
+            if (!entry) {
+              return <div key={`empty-${idx}`} className="ov-cal-cell ov-cal-cell--empty" />;
+            }
+
+            const salesOpacity = 0.15 + (entry.sales / maxSales) * 0.75;
+            const wastageOpacity = 0.15 + (entry.wastage / maxWastage) * 0.75;
+
+            return (
+              <div
+                key={`day-${entry.day}`}
+                className="ov-cal-cell"
+                title={`Day ${entry.day}: Sales ${entry.sales}, Wastage ${entry.wastage} kg`}
+              >
+                <div className="ov-cal-day">{entry.day}</div>
+                <div className="ov-cal-row" style={{ background: `rgba(45,106,79,${salesOpacity})` }}>
+                  <span className="ov-cal-tag">S</span>
+                  <span>{entry.sales}</span>
+                </div>
+                <div className="ov-cal-row" style={{ background: `rgba(201,162,39,${wastageOpacity})` }}>
+                  <span className="ov-cal-tag">W</span>
+                  <span>{entry.wastage}kg</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="ov-cal-legend">
+          <div className="ov-cal-legend-item"><span className="ov-cal-swatch ov-cal-swatch--sales" /> Sales intensity</div>
+          <div className="ov-cal-legend-item"><span className="ov-cal-swatch ov-cal-swatch--waste" /> Wastage intensity</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Predictions ───────────────────────────────────────────────────────────────
+function Predictions() {
+  const forecastByItem = {
+    'Kitchen Total': { demand: [245, 258, 265, 280, 320, 295, 275], waste: [18, 15, 20, 17, 25, 22, 19] },
+    'Chicken Rice': { demand: [82, 88, 91, 97, 112, 104, 98], waste: [6, 5, 7, 6, 9, 8, 7] },
+    Laksa: { demand: [46, 49, 52, 55, 64, 59, 57], waste: [4, 3, 4, 4, 6, 5, 4] },
+    'Mee Goreng': { demand: [38, 41, 42, 45, 52, 47, 44], waste: [3, 2, 3, 3, 4, 4, 3] },
+    'Nasi Lemak': { demand: [44, 47, 48, 51, 58, 53, 50], waste: [3, 3, 4, 3, 5, 4, 4] },
+    'Char Kway Teow': { demand: [35, 37, 39, 41, 48, 45, 43], waste: [2, 2, 3, 3, 4, 3, 3] },
+  };
+
+  const [forecastItem, setForecastItem] = useState('Kitchen Total');
+  const [whatIfItem, setWhatIfItem] = useState('Chicken Rice');
+  const [reduction, setReduction] = useState(10);
+  const selectedForecast = forecastByItem[forecastItem];
+
+  const forecastData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      { label: `${forecastItem} Demand Forecast`, data: selectedForecast.demand, borderColor: '#2d6a4f', borderDash: [6, 3], tension: 0.4, pointRadius: 5, pointBackgroundColor: '#2d6a4f', borderWidth: 2, fill: false },
+      { label: `${forecastItem} Predicted Waste`, data: selectedForecast.waste, borderColor: '#c9a227', tension: 0.4, pointRadius: 5, pointBackgroundColor: '#c9a227', borderWidth: 2, fill: false },
+    ],
+  };
+
+  const suggestions = [
+    { item: 'Vegetables', current: 25, suggested: 21, unit: 'kg', saving: '4 kg / S$14' },
+    { item: 'Bakery Items', current: 40, suggested: 34, unit: 'pcs', saving: '6 pcs / S$18' },
+    { item: 'Dairy', current: 15, suggested: 13, unit: 'L', saving: '2 L / S$8' },
+    { item: 'Fruits', current: 18, suggested: 17, unit: 'kg', saving: '1 kg / S$4' },
+  ];
+
+  const whatIfSaved = Math.round(reduction * 0.8);
+  const whatIfDollars = Math.round(whatIfSaved * 3.5);
+
+  return (
+    <div className="main-area">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Predictions</h1>
+          <p className="page-subtitle">Forward-looking demand forecasts and order planning</p>
+        </div>
+      </div>
+
+      <div className="kq-panel" style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
+          <h2 className="kq-panel-title" style={{ marginBottom: 0 }}>Next 7-Day Demand & Waste Forecast</h2>
+          <div style={{ minWidth: 220 }}>
+            <label className="ld-label">Predicted Item</label>
+            <select className="ld-input" value={forecastItem} onChange={e => setForecastItem(e.target.value)}>
+              {Object.keys(forecastByItem).map(item => <option key={item}>{item}</option>)}
+            </select>
+          </div>
+        </div>
+        <p className="kq-panel-sub-text pred-forecast-caption">Showing forecast for: <strong style={{ color: '#2d6a4f' }}>{forecastItem}</strong></p>
+        <div className="analytics-chart-wrap" style={{ height: 240 }}>
+          <Line data={forecastData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } }} />
+        </div>
+      </div>
+
+      <div className="kq-bottom-grid">
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">📦 Inventory Suggestions</h2>
+          <p className="kq-panel-sub-text">Recommended order reductions for next week based on predicted waste:</p>
+          <table className="ov-table">
+            <thead><tr><th>Category</th><th>Current Order</th><th>Suggested</th><th>Potential Saving</th></tr></thead>
+            <tbody>
+              {suggestions.map(s => (
+                <tr key={s.item}>
+                  <td>{s.item}</td>
+                  <td>{s.current} {s.unit}</td>
+                  <td className="pred-suggest">{s.suggested} {s.unit} ↓</td>
+                  <td className="pred-save">{s.saving}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">🔮 What-If Scenario</h2>
+          <p className="kq-panel-sub-text">Simulate the impact of reducing a menu item's prep quantity.</p>
+          <div className="wi-form">
+            <label className="ld-label">Menu Item</label>
+            <select className="ld-input" value={whatIfItem} onChange={e => setWhatIfItem(e.target.value)}>
+              {['Chicken Rice', 'Laksa', 'Mee Goreng', 'Nasi Lemak', 'Char Kway Teow'].map(i => <option key={i}>{i}</option>)}
+            </select>
+            <label className="ld-label" style={{ marginTop: 16 }}>
+              Reduce prep by: <strong style={{ color: '#2d6a4f' }}>{reduction}%</strong>
+            </label>
+            <input type="range" min={5} max={40} step={5} value={reduction} onChange={e => setReduction(Number(e.target.value))} className="wi-slider" />
+            <div className="wi-result">
+              <div className="wi-result-row"><span>Estimated waste saved</span><strong>{whatIfSaved} kg / week</strong></div>
+              <div className="wi-result-row"><span>Cost savings</span><strong style={{ color: '#2d6a4f' }}>S${whatIfDollars} / week</strong></div>
+              <div className="wi-result-row"><span>Demand impact</span><strong style={{ color: '#c9a227' }}>Low risk — within ±5% of forecast</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+function Analytics() {
+  const financialData = [
+    { category: 'Vegetables', icon: '🥬', kgWasted: 15, costPerKg: 3.5 },
+    { category: 'Bakery', icon: '🍞', kgWasted: 18, costPerKg: 4.2 },
+    { category: 'Dairy', icon: '🥛', kgWasted: 12, costPerKg: 3.8 },
+    { category: 'Meat', icon: '🍗', kgWasted: 6, costPerKg: 12.0 },
+    { category: 'Fruits', icon: '🍎', kgWasted: 8, costPerKg: 3.0 },
+  ];
+  const totalLost = financialData.reduce((s, r) => s + Math.round(r.kgWasted * r.costPerKg), 0);
+
+  const rootCauseData = {
+    labels: ['Over-preparation', 'Spoilage', 'Plate Waste', 'Damaged Stock', 'Supplier Quality'],
+    datasets: [{
+      data: [38, 27, 18, 10, 7],
+      backgroundColor: ['#2d6a4f', '#40916c', '#74c69d', '#c9a227', '#f4e09a'],
+      borderWidth: 0,
+    }],
+  };
+
+  const financialBarData = {
+    labels: financialData.map(r => r.category),
+    datasets: [{
+      label: 'Est. Loss (S$)',
+      data: financialData.map(r => Math.round(r.kgWasted * r.costPerKg)),
+      backgroundColor: ['#2d6a4f', '#c9a227', '#40916c', '#d97706', '#74c69d'],
+      borderRadius: 6,
+      barPercentage: 0.6,
+    }],
+  };
+
+  const esgMetrics = [
+    { label: 'CO₂ equivalent avoided', value: '87 kg', sub: 'Based on 105 kg waste reduction' },
+    { label: 'Equivalent meals donated', value: '340', sub: 'Est. at 300 g per meal' },
+    { label: 'Virtual water saved', value: '4,200 L', sub: 'Embedded in wasted food' },
+    { label: 'ESG Score (Food)', value: 'B+', sub: 'vs industry avg C+' },
+  ];
+
+  return (
+    <div className="main-area">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Analytics</h1>
+          <p className="page-subtitle">Financial impact, root cause analysis, and sustainability reporting</p>
+        </div>
+      </div>
+
+      <div className="kq-panel" style={{ marginBottom: 24 }}>
+        <div className="an-fin-header">
+          <h2 className="kq-panel-title">💸 Financial Impact — This Month</h2>
+          <div className="an-total-loss">Total estimated loss: <strong style={{ color: '#d32f2f' }}>S${totalLost}</strong></div>
+        </div>
+        <div className="an-fin-grid">
+          {financialData.map(r => (
+            <div key={r.category} className="an-fin-card">
+              <span className="an-fin-icon">{r.icon}</span>
+              <div className="an-fin-cat">{r.category}</div>
+              <div className="an-fin-loss">S${Math.round(r.kgWasted * r.costPerKg)}</div>
+              <div className="an-fin-detail">{r.kgWasted} kg × S${r.costPerKg}/kg</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="kq-bottom-grid" style={{ marginBottom: 24 }}>
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">🔍 Root Cause Analysis</h2>
+          <div className="analytics-chart-wrap" style={{ height: 260 }}>
+            <Doughnut data={rootCauseData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }} />
+          </div>
+        </div>
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">Loss by Category (S$)</h2>
+          <div className="analytics-chart-wrap" style={{ height: 260 }}>
+            <Bar data={financialBarData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } }} />
+          </div>
+        </div>
+      </div>
+
+      <div className="kq-panel">
+        <h2 className="kq-panel-title">🌱 Sustainability Report</h2>
+        <p className="kq-panel-sub-text">Metrics for ESG reporting and social impact. Exportable for tax incentive submissions related to food donation programmes.</p>
+        <div className="an-esg-grid">
+          {esgMetrics.map(m => (
+            <div key={m.label} className="an-esg-card">
+              <div className="an-esg-value">{m.value}</div>
+              <div className="an-esg-label">{m.label}</div>
+              <div className="an-esg-sub">{m.sub}</div>
+            </div>
+          ))}
+        </div>
+        <button className="ld-submit-btn" style={{ marginTop: 20 }}>Export ESG Report (PDF)</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function Settings() {
+  const [thresholds, setThresholds] = useState([
+    { category: 'Vegetables', target: 10, unit: 'kg' },
+    { category: 'Fruits', target: 6, unit: 'kg' },
+    { category: 'Dairy', target: 8, unit: 'L' },
+    { category: 'Bakery', target: 12, unit: 'kg' },
+    { category: 'Meat', target: 5, unit: 'kg' },
+  ]);
+  const [contacts, setContacts] = useState([
+    { name: 'Kitchen Manager', email: 'manager@kitcheniq.sg', active: true },
+    { name: 'Owner', email: 'owner@kitcheniq.sg', active: true },
+  ]);
+  const [newContact, setNewContact] = useState({ name: '', email: '' });
+  const [privacy, setPrivacy] = useState({
+    shareAnonymous: true,
+    allowResearch: false,
+    ipProtection: true,
+    dataRetention: '12 months',
+  });
+  const [saved, setSaved] = useState(false);
+
+  const handleThresholdChange = (i, val) =>
+    setThresholds(prev => prev.map((t, idx) => idx === i ? { ...t, target: Number(val) } : t));
+
+  const toggleContact = i =>
+    setContacts(prev => prev.map((c, idx) => idx === i ? { ...c, active: !c.active } : c));
+
+  const addContact = () => {
+    if (newContact.name && newContact.email) {
+      setContacts(prev => [...prev, { ...newContact, active: true }]);
+      setNewContact({ name: '', email: '' });
+    }
+  };
+
+  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2500); };
+
+  return (
+    <div className="main-area">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Settings</h1>
+          <p className="page-subtitle">Configure thresholds, alert contacts, and data privacy</p>
+        </div>
+        <button className="ld-submit-btn" onClick={handleSave}>Save Changes</button>
+      </div>
+
+      {saved && <div className="ld-success-banner">✅ Settings saved successfully.</div>}
+
+      <div className="kq-bottom-grid" style={{ marginBottom: 24 }}>
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">⚖️ Waste Thresholds by Category</h2>
+          <p className="kq-panel-sub-text">Maximum acceptable waste target per category per week.</p>
+          <div className="st-threshold-list">
+            {thresholds.map((t, i) => (
+              <div key={t.category} className="st-threshold-row">
+                <span className="st-cat-label">{t.category}</span>
+                <input type="number" min={0} step={0.5} className="ld-input st-threshold-input" value={t.target} onChange={e => handleThresholdChange(i, e.target.value)} />
+                <span className="st-unit">{t.unit} / week</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="kq-panel">
+          <h2 className="kq-panel-title">🔔 Alert Management</h2>
+          <p className="kq-panel-sub-text">Notify these contacts when waste exceeds a threshold.</p>
+          <div className="st-contacts">
+            {contacts.map((c, i) => (
+              <div key={i} className="st-contact-row">
+                <div className="st-contact-info">
+                  <span className="st-contact-name">{c.name}</span>
+                  <span className="st-contact-email">{c.email}</span>
+                </div>
+                <label className="st-toggle">
+                  <input type="checkbox" checked={c.active} onChange={() => toggleContact(i)} />
+                  <span className="st-toggle-slider" />
+                </label>
+              </div>
+            ))}
+          </div>
+          <div className="st-add-contact">
+            <input className="ld-input" placeholder="Name" value={newContact.name} onChange={e => setNewContact(p => ({ ...p, name: e.target.value }))} />
+            <input className="ld-input" placeholder="Email" type="email" value={newContact.email} onChange={e => setNewContact(p => ({ ...p, email: e.target.value }))} />
+            <button className="st-add-btn" onClick={addContact}>+ Add</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="kq-panel">
+        <h2 className="kq-panel-title">🔒 Data Privacy & IP Protection</h2>
+        <p className="kq-panel-sub-text">Control how your kitchen data is used. Your recipes, forecasting model weights, and operational patterns are proprietary and encrypted.</p>
+        <div className="st-privacy-grid">
+          {[
+            { key: 'shareAnonymous', label: 'Share anonymised data for benchmarking', sub: 'Your identity is never revealed. Helps improve industry-wide predictions.' },
+            { key: 'allowResearch', label: 'Allow data use for academic research', sub: 'Opt in to contribute to food waste reduction research programmes.' },
+            { key: 'ipProtection', label: 'IP protection for kitchen forecasting model', sub: 'Model weights and proprietary patterns are encrypted and not shared.' },
+          ].map(row => (
+            <div key={row.key} className="st-privacy-row">
+              <div className="st-privacy-info">
+                <span className="st-privacy-label">{row.label}</span>
+                <span className="st-privacy-sub">{row.sub}</span>
+              </div>
+              <label className="st-toggle">
+                <input type="checkbox" checked={privacy[row.key]} onChange={() => setPrivacy(p => ({ ...p, [row.key]: !p[row.key] }))} />
+                <span className="st-toggle-slider" />
+              </label>
+            </div>
+          ))}
+          <div className="st-privacy-row">
+            <div className="st-privacy-info">
+              <span className="st-privacy-label">Data retention period</span>
+              <span className="st-privacy-sub">How long historical records are stored on the server.</span>
+            </div>
+            <select className="ld-input" style={{ width: 160 }} value={privacy.dataRetention} onChange={e => setPrivacy(p => ({ ...p, dataRetention: e.target.value }))}>
+              {['3 months', '6 months', '12 months', '24 months', 'Indefinite'].map(o => <option key={o}>{o}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -406,14 +957,18 @@ function About() {
 function App() {
   return (
     <Router>
-      <nav style={{ padding: '1rem', background: '#f0f0f0', marginBottom: 24 }}>
-        <Link to="/" style={{ marginRight: '1rem' }}>Dashboard</Link>
-        <Link to="/about">About</Link>
-      </nav>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/about" element={<About />} />
-      </Routes>
+      <div className="app-shell">
+        <Sidebar />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/overview" element={<Overview />} />
+          <Route path="/predictions" element={<Predictions />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/log-data" element={<LogData />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
