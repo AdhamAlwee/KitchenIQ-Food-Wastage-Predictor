@@ -79,6 +79,15 @@ Frontend URL:
 
 - App: http://localhost:3000
 
+## Demo login credentials
+
+Use these credentials to sign in to the app:
+
+| Username | Password       | Role  |
+|----------|----------------|-------|
+| admin    | kitcheniq2026  | Admin |
+| chef     | chef1234       | Chef  |
+
 ## 4) First-run verification checklist
 
 1. Backend terminal shows Uvicorn running on port 8000.

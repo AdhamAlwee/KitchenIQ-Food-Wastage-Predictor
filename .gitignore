@@ -9,9 +9,18 @@ pnpm-lock.yaml
 # Testing
 /coverage
 
-# Production
-/build
+# Production build output (regenerate with npm run build)
+build/
 /dist
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+*.egg-info/
 
 # Environment variables
 .env
@@ -39,6 +48,12 @@ yarn-error.log*
 .npm
 .cache
 .eslintcache
+
+# CRA default assets (not used in KitchenIQ)
+frontend/src/logo.svg
+
+# Placeholder files
+*placeholder.txt
 
 
 

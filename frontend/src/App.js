@@ -271,7 +271,7 @@ const NAV_LINKS = [
   { to: '/settings', label: 'Settings' },
 ];
 
-function Sidebar() {
+function Sidebar({ user, onLogout }) {
   const location = useLocation();
   const active = NAV_LINKS.find(l => l.to === location.pathname);
   return (
@@ -291,7 +291,12 @@ function Sidebar() {
         ))}
       </nav>
       <div className="sidebar-footer">
-        <div className="sidebar-account">👤 Account (demo)</div>
+        <div className="sidebar-account">
+          <span>👤 {user ? `${user.username} (${user.role})` : 'Account'}</span>
+          {onLogout && (
+            <button className="sidebar-logout-btn" onClick={onLogout}>Sign out</button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -954,11 +959,120 @@ function Settings() {
   );
 }
 
+// ── Demo credentials ─────────────────────────────────────────────────────────
+const DEMO_USERS = [
+  { username: 'admin', password: 'kitcheniq2026', role: 'Admin' },
+  { username: 'chef', password: 'chef1234', role: 'Chef' },
+];
+
+function Login({ onLogin }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    setTimeout(() => {
+      const match = DEMO_USERS.find(
+        u => u.username === username.trim() && u.password === password
+      );
+      if (match) {
+        onLogin({ username: match.username, role: match.role });
+      } else {
+        setError('Invalid username or password.');
+      }
+      setLoading(false);
+    }, 600);
+  };
+
+  return (
+    <div className="login-bg">
+      <div className="login-card">
+        <div className="login-brand">
+          <span className="login-brand-icon">🌿</span>
+          <span className="login-brand-name">KitchenIQ</span>
+        </div>
+        <h1 className="login-title">Welcome back</h1>
+        <p className="login-sub">Sign in to your kitchen intelligence dashboard.</p>
+        <form className="login-form" onSubmit={handleSubmit} autoComplete="off">
+          <div className="login-field">
+            <label className="login-label" htmlFor="kiq-username">Username</label>
+            <input
+              id="kiq-username"
+              className="login-input"
+              type="text"
+              placeholder="e.g. admin"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              autoComplete="username"
+              required
+            />
+          </div>
+          <div className="login-field">
+            <label className="login-label" htmlFor="kiq-password">Password</label>
+            <div className="login-pw-wrap">
+              <input
+                id="kiq-password"
+                className="login-input"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                className="login-pw-toggle"
+                onClick={() => setShowPassword(v => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+          {error && <p className="login-error">{error}</p>}
+          <button className="login-btn" type="submit" disabled={loading}>
+            {loading ? 'Signing in…' : 'Sign In'}
+          </button>
+        </form>
+        <div className="login-hint">
+          <span>Demo credentials: </span>
+          <code>admin / kitcheniq2026</code>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const [user, setUser] = useState(null);
+
+  const handleLogout = () => setUser(null);
+
+  if (!user) {
+    return <Login onLogin={setUser} />;
+  }
+
   return (
     <Router>
       <div className="app-shell">
-        <Sidebar />
+        <Sidebar user={user} onLogout={handleLogout} />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/overview" element={<Overview />} />
